@@ -5,7 +5,8 @@ import (
         "fmt"
         "net/url"
         "os"
-
+        "io/ioutil"
+        "log"
         "github.com/huin/goupnp"
         "github.com/huin/goupnp/dcps/internetgateway1"
         "github.com/huin/goupnp/dcps/internetgateway2"
@@ -16,7 +17,6 @@ import (
 
 type user_input interface {
         action() bool
-        help() string
 }
 
 type api_call struct {
@@ -28,9 +28,26 @@ type local_command struct{
         cmd_name string
 }
 
-//func (a api_call) action() bool {
 
-//}
+func (l local_command) action() bool {
+    files, err := ioutil.ReadDir(".")
+    if err != nil {
+                        log.Fatal(err)
+                                }
+    fmt.Println(files)
+        return true
+}
+
+func (a api_call) action() bool {
+        clients, errors, err := internetgateway1.NewWANPPPConnection1Clients()
+        extIPClients := make([]GetExternalIPAddresser, len(clients))
+        for i, client := range clients {
+                extIPClients[i] = client
+        }
+        DisplayExternalIPResults(extIPClients, errors, err)
+        return true 
+
+}
 
 // Use discovered WANPPPConnection1 services to find external IP addresses.
 func Example_WANPPPConnection1_GetExternalIPAddress() {
@@ -169,10 +186,24 @@ func Example_WANCommonInterfaceConfig2_GetBytesTransferred() {
         // Output:
 }
 
+func exec_cmd(u user_input) {
+        u.action()
+}
+
+
+
 func main(){
 
+
+    ls := local_command{cmd_name: "ls"}
+    ip := api_call{endpoint: "", call_name: "external_ip"}
+
+exec_cmd(ls)
+exec_cmd(ip)
+
+
 //turd := 
-Example_WANIPConnection_GetExternalIPAddress()
+//Example_WANIPConnection_GetExternalIPAddress()
 //fmt.Println(turd)
 
 }
